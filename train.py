@@ -36,6 +36,7 @@ model = models.FastStyleNet()
 if args.cuda:
     model.cuda()
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
+model.train()
 
 style_image = load_image(args.style_image, args.style_size)
 style_image_batch = style.repeat(args.batch_size, 1, 1, 1)
