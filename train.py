@@ -1,10 +1,14 @@
 from __future__ import print_function
 import argparse
 import torch
-from loss.py import gram_matrix
+import torch.optim as optim
+from torch.autograd import Variable
+from torch.utils.data import DataLoader
+from model import FastStyleNet
+from data import get_training_set
+from data_util import batch_rgb_to_bgr
+from loss import loss_function
 
-
-# Training settings
 parser = argparse.ArgumentParser(description='Fast Neural style transfer with PyTorch.')
 parser.add_argument('style_image_path', metavar='ref', type=str, help='Path to the style reference image.')
 parser.add_argument("data_path", type=str, help="Path to training images")
@@ -17,14 +21,7 @@ parser.add_argument("--batchSize", default=4, type=int, help='Number of images p
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
 args = parser.parse_args()
 
-
-style_image_path = args.style_reference_image_path
-style_name = os.path.splitext(os.path.basename(style_reference_image_path))[0]
-
-''' Attributes '''
-img_width = img_height = int(args.img_size)
-num_iter = args.nb_imgs 
-cuda = opt.cuda
+cuda = args.cuda
 if cuda and not torch.cuda.is_available():
     raise Exception("No GPU found, please run without --cuda")
 
@@ -34,17 +31,11 @@ train_set = get_training_set()
 data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
 
 
-
 print('===> Building model')
 model = models.FastStyleNet()
-vgg = models.VGGFeature()
-vgg.load_state_dict(torch.load('vgg16feature.pth'))
 if args.cuda:
     model.cuda()
-    vgg.cuda()
-
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
 
 style = tensor_load_rgbimage(args.style_image, args.style_size)
 style = style.repeat(args.batch_size, 1, 1, 1)
@@ -56,21 +47,17 @@ xs = Variable(style, volatile=True)
 
 print('===> Training model')
 for epoch in range(args.epochs):
-    for batch in train_loader:
+    for batch in data_loader:
         data = batch[0].clone()
         data = batch_rgb_to_bgr(data)
         if args.cuda:
             data = data.cuda()
-
         xc = Variable(data.clone())
         y_hat = model(xc)
         optimizer.zero_grad()
-        loss = FeatureLoss(args.content_weight, yc, y_hat) + StyleLoss(args.style_weight, ys, y_hat)
+        loss = loss_function(args.content_weight, args.style_weight, yc, ys, y_hat)
         loss.backward()
         optimizer.step()
-        
         print('===> Epoch[{}] batch({}/{}): Loss: {:.4f}'.format(epoch, i, n_iter, loss.data[0]))
-
     torch.save(model.state_dict(), 'model_{}.pth'.format(epoch))
-
 torch.save(model.state_dict(), 'model.pth')

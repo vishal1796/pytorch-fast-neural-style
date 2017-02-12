@@ -93,10 +93,3 @@ class FastStyleNet(nn.Module):
         h = F.relu(self.b5(self.d2(h)))
         y = self.d3(h)
         return y
-
-
-def vgg16():
-    return VGG()
-
-def vgg16feature():
-    return VGGFeature()

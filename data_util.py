@@ -1,19 +1,18 @@
-class MyDataset(torch.utils.Dataset):
-    def __init__(self):
-        self.data_files = os.listdir('data_dir')
-        sort(self.data_files)
+import torch
 
-    def __getindex__(self, idx):
-        return load_file(self.data_files[idx])
-
-    def __len__(self):
-        return len(self.data_files)
-
-
-dset = MyDataset()
-loader = torch.utils.DataLoader(dset, num_workers=8)
+def vgg_preprocessing(batch):
+    tensortype = type(batch.data)
+    mean = tensortype(batch.data.size())
+    mean[:, 0, :, :] = 103.939
+    mean[:, 1, :, :] = 116.779
+    mean[:, 2, :, :] = 123.680
+    batch -= Variable(mean)
 
 
-
-def mean_standardise(x)
-	return transforms.Normalize(mean = [ 0.485, 0.456, 0.406 ], std = [ 1, 1, 1 ])
+# batch: Bx3xHxW
+def batch_rgb_to_bgr(batch):
+    batch = batch.transpose(0, 1)
+    (r, g, b) = torch.chunk(batch, 3)
+    batch = torch.cat((b, g, r))
+    batch = batch.transpose(0, 1)
+    return batch
