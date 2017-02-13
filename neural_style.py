@@ -22,7 +22,7 @@ if args.cuda:
 
 # load image
 img = Image.open(args.input)
-img = np.array(img)  # PIL->numpy
+img = np.array(img)
 img = np.array(img[..., ::-1])  # RGB->BGR
 img = img.transpose(2, 0, 1)  # HWC->CHW
 img = img.reshape((1, ) + img.shape)  # CHW->BCHW
