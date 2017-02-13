@@ -4,14 +4,14 @@ import torch
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from model import FastStyleNet
-from data import get_training_set
-from data_util import batch_rgb_to_bgr, load_image
+import models
+from dataset import get_training_set
+from data_utils import batch_rgb_to_bgr, load_image
 from loss import loss_function
 
 parser = argparse.ArgumentParser(description='Fast Neural style transfer using PyTorch.')
-parser.add_argument('style_image_path', metavar='ref', type=str, help='Path to the style reference image.')
-parser.add_argument("data_path", type=str, help="Path to training images")
+parser.add_argument('--style_image', metavar='ref', type=str, help='Path to the style reference image.')
+parser.add_argument("--dataset_path", type=str, help="Path to training images")
 parser.add_argument("--content_weight", type=float, default=1.0, help='Content weight')
 parser.add_argument("--style_weight", type=float, default=5.0, help='Style weight')
 parser.add_argument("--image_size", dest="img_size", default=256, type=int, help='Output Image size')
@@ -27,12 +27,12 @@ if cuda and not torch.cuda.is_available():
 
 
 print('===> Loading datasets')
-train_set = get_training_set()
+train_set = get_training_set(args.dataset_path)
 data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
 
 
 print('===> Building model')
-model = models.FastStyleNet()
+model = models.ImageTransformNet()
 if args.cuda:
     model.cuda()
 optimizer = optim.Adam(model.parameters(), lr=args.lr)

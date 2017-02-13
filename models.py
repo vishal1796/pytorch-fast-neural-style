@@ -60,7 +60,7 @@ class ResidualBlock(Module):
         h = self.b2(self.c2(h))
         return h + x
 
-class FastStyleNet(Module):
+class ImageTransformNet(Module):
     def __init__(self):
         super(FastStyleNet, self).__init__()
         self.c1=torch.nn.Conv2d(3, 32, kernel_size=9, stride=1, padding=4)
