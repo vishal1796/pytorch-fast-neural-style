@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 from PIL import Image
 
 def vgg_preprocessing(batch):

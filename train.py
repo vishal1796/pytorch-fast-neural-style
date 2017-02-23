@@ -4,18 +4,19 @@ import torch
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-import models
-from dataset import get_training_set
+from torchvision import datasets, transforms
 from data_utils import batch_rgb_to_bgr, load_image
 from loss import loss_function
+import models
 
 parser = argparse.ArgumentParser(description='Fast Neural style transfer using PyTorch.')
 parser.add_argument('--style_image', metavar='ref', type=str, help='Path to the style reference image.')
 parser.add_argument("--dataset_path", type=str, help="Path to training images")
 parser.add_argument("--content_weight", type=float, default=1.0, help='Content weight')
 parser.add_argument("--style_weight", type=float, default=5.0, help='Style weight')
-parser.add_argument("--image_size", dest="img_size", default=256, type=int, help='Output Image size')
+parser.add_argument("--image_size", default=256, type=int, help='Output Image size')
 parser.add_argument("--epochs", default=2, type=int, help='Number of epochs')
+parser.add_argument('--threads', type=int, default=4, help='number of threads for data loader to use')
 parser.add_argument("--batchSize", default=4, type=int, help='Number of images per epoch')
 parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate. Default=0.01')
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
@@ -27,8 +28,12 @@ if cuda and not torch.cuda.is_available():
 
 
 print('===> Loading datasets')
-train_set = get_training_set(args.dataset_path)
-data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
+transform = transforms.Compose([transforms.Scale(args.image_size),
+                               transforms.CenterCrop(args.image_size),
+                               transforms.ToTensor(),
+                               transforms.Lambda(lambda x: x.mul(255))])
+train_set = datasets.ImageFolder(args.dataset_path, transform)
+data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size=args.batchSize, shuffle=True)
 
 
 print('===> Building model')
@@ -38,8 +43,8 @@ if args.cuda:
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 model.train()
 
-style_image = load_image(args.style_image, args.style_size)
-style_image_batch = style.repeat(args.batch_size, 1, 1, 1)
+style_image = load_image(args.style_image, args.image_size)
+style_image_batch = style_image.repeat(args.batchSize, 1, 1, 1)
 style_image_batch = batch_rgb_to_bgr(style_image_batch)
 if args.cuda:
     style_image_batch = style_image_batch.cuda()
