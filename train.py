@@ -18,7 +18,7 @@ parser.add_argument("--image_size", default=256, type=int, help='Output Image si
 parser.add_argument("--epochs", default=2, type=int, help='Number of epochs')
 parser.add_argument('--threads', type=int, default=4, help='number of threads for data loader to use')
 parser.add_argument("--batchSize", default=4, type=int, help='Number of images per epoch')
-parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate. Default=0.01')
+parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate of optimizer')
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
 args = parser.parse_args()
 
@@ -52,15 +52,15 @@ xs = Variable(style_image_batch, volatile=True)
 
 print('===> Training model')
 for epoch in range(args.epochs):
-    for iteration, batch in enumerate(data_loader, 1):
-        data = batch[0].clone()
-        data = batch_rgb_to_bgr(data)
+    for iteration, batch in enumerate(data_loader):
+        x = Variable(batch[0])
+        x = batch_rgb_to_bgr(x)
         if args.cuda:
-            data = data.cuda()
-        xc = Variable(data.clone())
-        y_hat = model(xc)
+            x = x.cuda()
+        y_hat = model(x)
+        xc = Variable(x.clone())
         optimizer.zero_grad()
-        loss = loss_function(args.content_weight, args.style_weight, yc, ys, y_hat)
+        loss = loss_function(args.content_weight, args.style_weight, xc, xs, y_hat)
         loss.backward()
         optimizer.step()
         print("===> Epoch[{}]({}/{}): Loss: {:.4f}".format(epoch, iteration, len(data_loader), loss.data[0]))

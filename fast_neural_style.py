@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
-model = models.FastStyleNet()
+model = models.ImageTransformNet()
 model.load_state_dict(torch.load(args.model))
 if args.cuda:
     model.cuda()
