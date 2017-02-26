@@ -1,6 +1,7 @@
 import os
 import torch
 from torch.nn import MSELoss
+from torch.utils.serialization import load_lua
 import models
 from data_utils import vgg_preprocessing
 
