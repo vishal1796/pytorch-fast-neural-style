@@ -58,7 +58,7 @@ for epoch in range(args.epochs):
         if args.cuda:
             x = x.cuda()
         y_hat = model(x)
-        xc = Variable(x.clone())
+        xc = Variable(x.data, volatile=True)
         optimizer.zero_grad()
         loss = loss_function(args.content_weight, args.style_weight, xc, xs, y_hat)
         loss.backward()
