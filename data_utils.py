@@ -1,5 +1,6 @@
 import os
 import torch
+from torch.autograd import Variable
 import numpy as np
 from PIL import Image
 
