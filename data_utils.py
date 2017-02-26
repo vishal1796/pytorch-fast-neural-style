@@ -12,8 +12,6 @@ def vgg_preprocessing(batch):
     mean[:, 2, :, :] = 123.680
     batch -= Variable(mean)
 
-
-# batch: Bx3xHxW
 def batch_rgb_to_bgr(batch):
     batch = batch.transpose(0, 1)
     (r, g, b) = torch.chunk(batch, 3)
@@ -21,8 +19,7 @@ def batch_rgb_to_bgr(batch):
     batch = batch.transpose(0, 1)
     return batch
 
-
-# result: RGB CxHxW [0,255] torch.FloatTensor
+RGB CxHxW [0,255] torch.FloatTensor
 def load_image(filename, size=None):
     img = Image.open(filename)
     if size is not None:
