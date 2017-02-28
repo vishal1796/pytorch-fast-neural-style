@@ -9,6 +9,7 @@ from data_utils import batch_rgb_to_bgr, load_image
 from loss import loss_function
 import models
 
+# Training settings
 parser = argparse.ArgumentParser(description='Fast Neural style transfer using PyTorch.')
 parser.add_argument('--style_image', metavar='ref', type=str, help='Path to the style reference image.')
 parser.add_argument("--dataset_path", type=str, help="Path to training images")
@@ -38,31 +39,45 @@ data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size
 
 print('===> Building model')
 model = models.ImageTransformNet()
-if args.cuda:
+if cuda:
     model.cuda()
+
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 model.train()
 
+print('===> Loading Style Image')
 style_image = load_image(args.style_image, args.image_size)
 style_image_batch = style_image.repeat(args.batchSize, 1, 1, 1)
 style_image_batch = batch_rgb_to_bgr(style_image_batch)
-if args.cuda:
+if cuda:
     style_image_batch = style_image_batch.cuda()
 xs = Variable(style_image_batch, volatile=True)
 
 print('===> Training model')
-for epoch in range(args.epochs):
+def train(epoch):
+    epoch_loss = 0
     for iteration, batch in enumerate(data_loader):
         x = Variable(batch[0])
-        x = batch_rgb_to_bgr(x)
-        if args.cuda:
+        if cuda:
             x = x.cuda()
+        
         y_hat = model(x)
         xc = Variable(x.data, volatile=True)
         optimizer.zero_grad()
-        loss = loss_function(args.content_weight, args.style_weight, xc, xs, y_hat)
+        loss = loss_function(args.content_weight, args.style_weight, xc, xs, y_hat, cuda)
         loss.backward()
         optimizer.step()
+
         print("===> Epoch[{}]({}/{}): Loss: {:.4f}".format(epoch, iteration, len(data_loader), loss.data[0]))
-    torch.save(model.state_dict(), 'model_{}.pth'.format(epoch))
-torch.save(model.state_dict(), 'model.pth')
+
+    print("===> Epoch {} Complete: Avg. Loss: {:.4f}".format(epoch, epoch_loss / len(training_data_loader)))
+
+
+def checkpoint(epoch):
+    model_out_path = "model_epoch_{}.pth".format(epoch)
+    torch.save(model.state_dict(), model_out_path)
+    print("Checkpoint saved to {}".format(model_out_path))
+
+for epoch in range(1, args.epochs + 1):
+    train(epoch)
+    checkpoint(epoch)

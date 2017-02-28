@@ -1,8 +1,10 @@
 import os
 import torch
+from torch.nn import MSELoss
 from torch.utils.serialization import load_lua
+from torch.autograd import Variable
 import models
-from data_utils import vgg_preprocessing
+from data_utils import vgg_mean_subtraction
 
 
 def vgg16_model():
@@ -22,26 +24,29 @@ def gram_matrix(y):
     gram = features.bmm(features_t) / (C*H*W)
     return gram
 
-def loss_function(content_weight, style_weight, yc, ys, y_hat):
+def loss_function(content_weight, style_weight, yc, ys, y_hat, cuda):
     vgg16_model()
     vgg = models.VGGFeature()
     vgg.load_state_dict(torch.load('vgg16feature.pth'))
-    vgg.cuda()
-        
-    vgg_preprocessing(yc)
-    vgg_preprocessing(ys)
-    vgg_preprocessing(y_hat)
-    
-    loss_func = torch.nn.MSELoss()
-    
+    criterion = torch.nn.MSELoss()
+
+    if cuda:
+        vgg = vgg.cuda()
+        criterion = criterion.cuda()
+
+    vgg_mean_subtraction(yc)
+    vgg_mean_subtraction(ys)
+    vgg_mean_subtraction(y_hat)
+
     feature_c = vgg(yc)
     feature_hat = vgg(y_hat)
-    feat_loss = content_weight * loss_func(feature_hat[2], Variable(feature_c[2].data, requires_grad=False))
+    feat_loss = content_weight * criterion(feature_hat[2], Variable(feature_c[2].data, requires_grad=False))
 
-    feature_s = vgg(Variable(ys, volatile=True))
+    feature_s = vgg(ys)
     gram_s = [gram_matrix(y) for y in feature_s]
     gram_hat = [gram_matrix(y) for y in feature_hat]
+    style_loss = 0
     for m in range(0, len(feature_hat)):
-        style_loss += style_weight * loss_func(gram_hat[m], Variable(gram_s[m].data, requires_grad=False))
+        style_loss += style_weight * criterion(gram_hat[m], Variable(gram_s[m].data, requires_grad=False))
 
     return style_loss + feat_loss
