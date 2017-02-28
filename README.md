@@ -15,7 +15,7 @@ python train.py --style_image "images/style/xyz.jpg" --dataset_path "images/cont
 
 ## Generate
 ```
-python fast_neural_style.py --input_image "images/input/xyz.jpg" -model "model_epoch_2" --output_name "output.jpg" --cuda
+python fast_neural_style.py --input_image "images/input/xyz.jpg" -model "model_epoch_2.pth" --output_name "output.jpg" --cuda
 ```
 
 ## Reference
