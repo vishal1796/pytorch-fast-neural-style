@@ -18,16 +18,5 @@ python train.py --style_image "images/style/xyz.jpg" --dataset_path "images/cont
 python fast_neural_style.py --input_image "images/input/xyz.jpg" -model "model_epoch_2" --output_name "output.jpg" --cuda
 ```
 
-This repo has pretrained models as an example.
-
-- example:
-```
-python generate.py sample_images/tubingen.jpg -m models/composition.model -o sample_images/output.jpg
-```
-or
-```
-python generate.py sample_images/tubingen.jpg -m models/seurat.model -o sample_images/output.jpg
-```
-
 ## Reference
 - [Perceptual Losses for Real-Time Style Transfer and Super-Resolution](http://arxiv.org/abs/1603.08155)
