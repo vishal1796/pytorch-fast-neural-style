@@ -58,6 +58,7 @@ def train(epoch):
     epoch_loss = 0
     for iteration, batch in enumerate(data_loader):
         x = Variable(batch[0])
+        x = batch_rgb_to_bgr(x)
         if cuda:
             x = x.cuda()
         
